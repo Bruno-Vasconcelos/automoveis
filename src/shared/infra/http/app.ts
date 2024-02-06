@@ -11,7 +11,6 @@ const app = express();
 
 app.use(express.json() as RequestHandler);
 
-
 app.use(routes);
 
 app.use(

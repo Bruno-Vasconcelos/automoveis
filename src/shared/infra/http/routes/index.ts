@@ -25,7 +25,6 @@ import {
 } from '../controllers/driverController';
 
 // Rotas para Ações com o carro
-router.post('/driver/register', registerDriver);
 router.post('/car/register', registerCar);
 router.put('/car/update/:licensePlate', updateCar);
 router.get('/car/get/:licensePlate', getCar);

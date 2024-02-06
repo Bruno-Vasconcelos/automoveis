@@ -1,6 +1,8 @@
-// __tests__/carController.test.ts
 import { Request, Response } from 'express';
-import { register } from '../shared/infra/http/controllers/carController';
+import CarService from '../shared/infra/http/services/carService';
+import request from 'supertest';
+import { app } from '../shared/infra/http/app';
+import PGClient from '../pg-cliente';
 
 describe('Car Controller', () => {
   let mockRequest: Partial<Request>;
@@ -14,20 +16,141 @@ describe('Car Controller', () => {
     };
   });
 
-  test('should register a new car', async () => {
+  afterEach(() => {
+    jest.resetAllMocks()
+  });
+
+  afterAll(() => {
+    PGClient.endInstance();
+  });
+
+  it('should register a new car', async () => {
+
     mockRequest.body = {
       licensePlate: 'ABC123',
       color: 'Red',
       brand: 'Toyota',
     };
 
-    await register(mockRequest as Request, mockResponse as Response);
-
-    expect(mockResponse.status).toHaveBeenCalledWith(201);
-    expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
-      license_plate: 'ABC123',
+    jest.spyOn(CarService, 'registerCar').mockResolvedValue(
+      mockRequest.body,
+    );
+    const response = await request(app)
+            .post('/car/register')
+            .send(mockRequest.body)
+        
+    expect(response.status).toStrictEqual(201);
+    expect(response.body).toEqual({
+      licensePlate: 'ABC123',
       color: 'Red',
       brand: 'Toyota',
-    }));
+    });
   });
+
+  it('should get a car', async () => {
+
+    mockRequest.body = {
+      licensePlate: 'ABC123',
+      color: 'Red',
+      brand: 'Toyota',
+    };
+
+    jest.spyOn(CarService, 'getCar').mockResolvedValue(
+      mockRequest.body,
+    );
+
+    const response = await request(app)
+            .get('/car/get/ABC123')
+            .send()
+        
+    expect(response.status).toStrictEqual(200);
+    expect(response.body).toEqual({
+      licensePlate: 'ABC123',
+      color: 'Red',
+      brand: 'Toyota',
+    });
+  });
+
+  it('should list all cars', async () => {
+
+    mockRequest.body = [{
+      licensePlate: 'ABC123',
+      color: 'Red',
+      brand: 'Toyota',
+    },
+    {
+      licensePlate: '123ABC',
+      color: 'Red',
+      brand: 'Toyota',
+    }];
+
+    jest.spyOn(CarService, 'listCars').mockResolvedValue(
+      mockRequest.body,
+    );
+
+    const response = await request(app)
+            .get('/car/list')
+            .send()
+        
+    expect(response.status).toStrictEqual(200);
+    expect(response.body).toEqual([{
+      licensePlate: 'ABC123',
+      color: 'Red',
+      brand: 'Toyota',
+    },
+    {
+      licensePlate: '123ABC',
+      color: 'Red',
+      brand: 'Toyota',
+    }]);
+  });
+
+  it('should update a car', async () => {
+
+    mockRequest.body = {
+      licensePlate: 'ABC123',
+      color: 'silver',
+      brand: 'Toyota',
+    };
+
+    jest.spyOn(CarService, 'updateCar').mockResolvedValue(
+      mockRequest.body,
+    );
+
+    const response = await request(app)
+            .put('/car/update/ABC123')
+            .send(mockRequest.body)
+        
+    expect(response.status).toStrictEqual(200);
+    expect(response.body).toEqual({
+      licensePlate: 'ABC123',
+      color: 'silver',
+      brand: 'Toyota',
+    });
+  });
+
+  it('should delete a car', async () => {
+
+    mockRequest.body = {
+      licensePlate: 'ABC123',
+      color: 'silver',
+      brand: 'Toyota',
+    };
+
+    jest.spyOn(CarService, 'deleteCar').mockResolvedValue(
+      mockRequest.body,
+    );
+
+    const response = await request(app)
+            .delete('/car/delete/ABC123')
+            .send()
+        
+    expect(response.status).toStrictEqual(200);
+    expect(response.body).toEqual({
+      licensePlate: 'ABC123',
+      color: 'silver',
+      brand: 'Toyota',
+    });
+  });
+
 });

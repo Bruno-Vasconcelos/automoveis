@@ -1,115 +1,88 @@
 import { Request, Response } from 'express';
-import { Client, QueryResult } from 'pg';
-
-const client = new Client({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'test_seidor',
-    password: 'postgre',
-    port: 5432,
-});
-
-client.connect();
-
-// Cadastra motorista
-export const registerDriver = async (req: Request, res: Response) => {
+import DriverService from '../services/driverService';
+import { Driver } from '../models/driverModel';
+export const registerDriver = async (req: Request, res: Response): Promise<void> => {
     const { name } = req.body;
 
     try {
-        const result: QueryResult = await client.query(
-            'INSERT INTO drivers (name) VALUES ($1) RETURNING *',
-            [name]
-        );
-
-        const newDriver = result.rows[0];
-        return res.status(201).json(newDriver);
-    } catch (error) {
+        const result = await DriverService.registerDriver(name);
+        const newDriver = result as Driver;
+        res.status(201).json(newDriver);
+    } catch (error: any) {
         console.error('Erro ao cadastrar motorista:', error);
-        return res.status(500).json({ error: 'Erro interno do servidor.' });
+        res.status(500).json({ error: 'Erro interno do servidor.' });
     }
 };
 
-// Atualizar motorista
-export const updateDriver = async (req: Request, res: Response) => {
+export const updateDriver = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const { name } = req.body;
 
     try {
-        const result: QueryResult = await client.query(
-            'UPDATE drivers SET name = $1 WHERE id = $2 RETURNING *',
-            [name, id]
-        );
-
-        const updatedDriver = result.rows[0];
+        const result = await DriverService.updateDriver(id, name);
+        const updatedDriver = result as Driver;
 
         if (!updatedDriver) {
-            return res.status(404).json({ error: 'Motorista não encontrado.' });
+            res.status(404).json({ error: 'Motorista não encontrado.' });
+            return;
         }
 
-        return res.json(updatedDriver);
-    } catch (error) {
+        res.json(updatedDriver);
+    } catch (error: any) {
         console.error('Erro ao atualizar motorista:', error);
-        return res.status(500).json({ error: 'Erro interno do servidor.' });
+        res.status(500).json({ error: 'Erro interno do servidor.' });
     }
 };
 
-// Deletar Motorista
-export const deleteDriver = async (req: Request, res: Response) => {
+export const deleteDriver = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
 
     try {
-        const result: QueryResult = await client.query('DELETE FROM drivers WHERE id = $1 RETURNING *', [id]);
-
-        const deletedDriver = result.rows[0];
+        const result = await DriverService.deleteDriver(id);
+        const deletedDriver = result as Driver;
 
         if (!deletedDriver) {
-            return res.status(404).json({ error: 'Motorista não encontrado.' });
+            res.status(404).json({ error: 'Motorista não encontrado.' });
+            return;
         }
 
-        return res.json(deletedDriver);
-    } catch (error) {
+        res.json(deletedDriver);
+    } catch (error: any) {
         console.error('Erro ao excluir motorista:', error);
-        return res.status(500).json({ error: 'Erro interno do servidor.' });
+        res.status(500).json({ error: 'Erro interno do servidor.' });
     }
 };
 
-// Retorna motorista
-export const getDriver = async (req: Request, res: Response) => {
+export const getDriver = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
 
     try {
-        const result: QueryResult = await client.query('SELECT * FROM drivers WHERE id = $1', [id]);
-
-        const driver = result.rows[0];
+        const result = await DriverService.getDriver(id);
+        const driver = result as Driver;
 
         if (!driver) {
-            return res.status(404).json({ error: 'Motorista não encontrado.' });
+            res.status(404).json({ error: 'Motorista não encontrado.' });
+            return;
         }
 
-        return res.json(driver);
-    } catch (error) {
+        res.json(driver);
+    } catch (error: any) {
         console.error('Erro ao recuperar motorista:', error);
-        return res.status(500).json({ error: 'Erro interno do servidor.' });
+        res.status(500).json({ error: 'Erro interno do servidor.' });
     }
 };
 
-// Lista motoristas
-export const listDrivers = async (req: Request, res: Response) => {
+export const listDrivers = async (req: Request, res: Response): Promise<void> => {
     const { name } = req.query;
 
     try {
-        let query = 'SELECT * FROM drivers';
+        const result = await DriverService.listDrivers(name as string);
+        const drivers = result as Driver[];
 
-        if (name) {
-            query += ` WHERE name = '${name}'`;
-        }
-
-        const result: QueryResult = await client.query(query);
-        const drivers = result.rows;
-
-        return res.json(drivers);
-    } catch (error) {
+        res.json(drivers);
+    } catch (error: any) {
         console.error('Erro ao listar motoristas:', error);
-        return res.status(500).json({ error: 'Erro interno do servidor.' });
+        res.status(500).json({ error: 'Erro interno do servidor.' });
     }
 };
+

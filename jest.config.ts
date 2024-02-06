@@ -23,7 +23,7 @@ export default {
   coverageDirectory: 'coverage',
   coverageProvider: 'v8',
   coverageReporters: ['text-summary', 'lcov'],
-  globalSetup: '<rootDir>/src/__test__/setup-db.ts',
+  // globalSetup: '<rootDir>/src/__test__/setup-db.ts',
 
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
     prefix: '<rootDir>/src/',
